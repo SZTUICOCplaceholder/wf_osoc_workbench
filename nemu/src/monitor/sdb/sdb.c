@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include "memory/paddr.h"
 
 static int is_batch_mode = false;
 
@@ -47,9 +48,69 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_si(char *args){
+	char *arg = strtok(args," ");
+/*	if (arg == NULL){
+		printf("Too few arguments.");
+		return 1;}*/
+	int steps;
+	if (arg == NULL) steps = 1;
+	else steps = atoi(arg);
+	cpu_exec(steps);
+	printf("Command si %d has finished\n",steps);
+	/*if (nemu_state.state == NEMU_QUIT){
+	printf("Didn't run such many steps because your program ended before taht");
+	}*/   //Why can not do that?
+	return 0;
+}
 
 static int cmd_q(char *args) {
   return -1;
+}
+
+static int cmd_info(char *args){
+	char *arg = strtok(NULL," ");
+	if(arg == NULL){
+		printf("'r' for register and 'w' for watchpoints \n");
+		return 0;
+		}
+	else{
+	if(strcmp(arg,"r") == 0){
+		isa_reg_display();
+		printf("all register have been printed.\n");
+		}
+	else if (strcmp(arg,"w") == 0){
+		}
+	else printf("Unknown command!\n"); 
+	}
+	return 0;
+}
+
+static int cmd_x(char *args){
+	char* str_len = strtok(args," ");
+	char* addr_str = strtok(NULL," ");
+	if (str_len == NULL || addr_str == NULL) {
+		printf("Invalid input!\n");
+		return -1;
+		}
+	int len = atoi(str_len); int addr = strtol(addr_str,NULL,16);
+	if (!in_pmem(addr) || !in_pmem(addr + len - 1)) {
+		printf("Not a valid address.\n");
+		return 0;
+		}
+	for (int i = 0; i < len; i++){
+		word_t data = paddr_read(addr + i-1,1);
+		printf("Address: 0x%x, Data: 0x%x\n", addr + i, data);
+		}
+	return 0;
+}
+
+static int cmd_p(char* args){
+	bool success;
+	word_t result = expr(args,&success);
+	if (!success) printf("Invalid expression\n");
+	else printf("Result: %u\n",result);
+	return 0;
 }
 
 static int cmd_help(char *args);
@@ -62,7 +123,10 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  { "si", "Continue the execution by n steps", cmd_si },
+  { "info", "Exhibit registers or watchpoints", cmd_info },
+  { "x", "Scan memory", cmd_x },
+  { "p", "Calculate the expression", cmd_p},
   /* TODO: Add more commands */
 
 };
@@ -125,7 +189,9 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-        if (cmd_table[i].handler(args) < 0) { return; }
+        if (cmd_table[i].handler(args) < 0) {
+        	if (strcmp(cmd,"q") == 0) nemu_state.state = NEMU_QUIT;
+        return;}
         break;
       }
     }
