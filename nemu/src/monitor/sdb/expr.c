@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include "memory/paddr.h"
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -25,7 +26,8 @@ bool check_parentheses(int p, int q);
 static int find_major_op_location(int p, int q);
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM,  
+  TK_NOTYPE = 256, TK_EQ, TK_NUM, TK_REG, TK_LOE, TK_MOE, TK_NEQ,
+  TK_LT, TK_MT, TK_AND, TK_OR, TK_POT
 	/*——————————————//finished?——————————————*/
   /* TODO: Add more token types */
 };
@@ -39,14 +41,22 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
+  {"\\$[A-Za-z]+([0-9]?)+", TK_REG}, 	//register
   {"==", TK_EQ},        // equal
-  {"\\+", '+'},         // plus
+  {"<", TK_LT},  		//less than
+  {">", TK_MT},  		//more than
+  {"<=", TK_LOE},		//less or equal
+  {">=", TK_MOE},		//more or equal
+  {"!=", TK_NEQ}, 		//not equal
+  {"&&", TK_AND},  		//logical and
+  {"\\|\\|", TK_OR}, 		//logical or
+  {"\\+", '+'},         
   {"\\-", '-'},
-  //{"==", TK_EQ},        // equal
   {"\\(", '('},
   {"\\)", ')'},
   {"\\*", '*'},
   {"\\/", '/'},
+  {"0[Xx][0-9a-fA-F]+", TK_NUM},   //hexadecimal number
   {"[0-9]+", TK_NUM},
 }; 						//has finished       ?
 
@@ -79,7 +89,20 @@ typedef struct token {
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
-static bool make_token(char *e) {
+static bool is_hexadecimal(char* s){
+	if (s == NULL || strlen(s) < 2) return false;
+	if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) return true;
+	else return false;
+}
+
+static void hex_to_dec(char* s){
+	long hex_value = strtol(s, NULL, 16);
+	snprintf(s, 31, "%ld", hex_value);
+	//printf("hex_value: %ld\n",hex_value);
+	//printf("hex_str: %s\n",s);
+}
+
+static bool make_token(char* e) {
   int position = 0;
   int i;
   regmatch_t pmatch;
@@ -102,11 +125,25 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-
         int copy_len;
         switch (rules[i].token_type) {
         	case TK_NOTYPE: break;
-        	case TK_NUM: 
+        	case TK_REG:
+        	if (substr_len > 7){
+        		printf("What a long name! do u sure this is a register? U idiot.\n");
+        		return false;
+        	}
+        	else if (substr_len <= 2){
+        		printf("As short as your d**k, check the name seriously!\n");
+        		return false;
+        	}
+        	else copy_len = substr_len;
+        	strncpy(tokens[nr_token].str, substr_start, copy_len);
+        	tokens[nr_token].str[copy_len] = '\0';
+        	tokens[nr_token].type = TK_REG;
+        	nr_token++;
+        	break;
+        	case TK_NUM:
         	if (nr_token >= 32) {
         		printf("Too many tokens\n");
         		return false;
@@ -118,7 +155,7 @@ static bool make_token(char *e) {
         	tokens[nr_token].str[copy_len] = '\0';
         	nr_token++;
         	break;
-            default: 
+            default:
             	if (nr_token > 31) {
             		printf("Too many tokens\n");
             		return false;
@@ -128,6 +165,7 @@ static bool make_token(char *e) {
             	nr_token++;
             	break;
         }
+        //printf("now: %s",tokens[0].str);
         break;
       }
     }
@@ -141,11 +179,45 @@ static bool make_token(char *e) {
   return true;
 }
 
+static bool is_pointer(int index){
+	if (index == 0) return true;
+	else{
+		if (tokens[index-1].type == TK_NUM 
+		 || tokens[index-1].type == ')') return false;
+		 else return true;
+	}
+}
 
 word_t expr(char* e, bool* success) {
-  if (!make_token(e)) {
-    *success = false;
-    return 0;
+	if (!make_token(e)) {
+    	*success = false;
+    	return 0;
+	}
+	//handle all the tokens needed to change their form
+	for (int i = 0; i < nr_token; i ++){
+	//pointer
+  	if (tokens[i].type == '*'){
+  		if (is_pointer(i)){
+  			//printf("address: %s\n",tokens[i+1].str);
+  			int address = strtol(tokens[i+1].str,NULL,16);
+  			//printf("addr: %x\n",address);
+  			word_t pointer_value = paddr_read(address,4);
+  			snprintf(tokens[i+1].str,31,"%" PRIu32,pointer_value);
+  			//printf("value: %s\n",tokens[i+1].str);
+  			tokens[i].type = TK_POT;
+  		}
+  	}
+  	//number
+  	if (tokens[i].type == TK_NUM){
+  		if (is_hexadecimal(tokens[i].str)) hex_to_dec(tokens[i].str);
+  	}
+  	//register
+  	if (tokens[i].type == TK_REG){
+  		//printf("reg: %s\n",tokens[i].str);
+  		word_t reg_value = isa_reg_str2val(tokens[i].str,success);
+  		snprintf(tokens[i].str,31,"%" PRIu32,reg_value);
+  		tokens[i].type = TK_NUM;
+  	}
   }
   return eval(0,nr_token-1,success);
 }
@@ -165,12 +237,23 @@ bool check_parentheses(int p, int q){
 
   /* TODO: Insert codes to evaluate the expression. */
 
+static bool logical(int token_type){
+	switch(token_type){
+		case TK_EQ:  case TK_LT:  case TK_MT:  case TK_LOE:
+		case TK_MOE: case TK_NEQ: case TK_AND:
+		return true;
+	default: return false;
+	}
+}
+
 static int level(int token_type){
+	if (logical(token_type))  return -1;
 	switch(token_type){
 		case '+': case '-': return 1;
 		case '*': case '/': return 2;
-		case TK_NUM: return 3;
-		default: return 4;
+		case TK_POT: return 3;
+		case TK_NUM: return 4;
+		default: return 10;
 	}
 }
 
@@ -178,7 +261,7 @@ static int find_major_op_location(int p,int q){
 	int par = 0, op_level = 3,location = -1;
 	for (int i = p; i <= q; i++){
 		if (tokens[i].type == '(') par++;       //if it's in  parentheses
-		else if (tokens[i].type == ')') par--;  //needn't think about it
+		else if (tokens[i].type == ')') par--;  //needn't consider it
 		if (par != 0) continue;
 		if (level(tokens[i].type) <= op_level && par == 0){
 			location = i;
@@ -188,19 +271,70 @@ static int find_major_op_location(int p,int q){
 	return location;
 }
 
+/*static word_t num_dispose(int index, bool* ok){
+	*ok = true;
+	switch(tokens[index].type){
+		case TK_NUM:
+			if (is_hexadecimal(substr_start)) return strtol(s, NULL, 16);
+			else return atoi(tokens[index].str);
+			break;
+		case TK_REG:
+			return isa_reg_str2val(tokens[index].str, ok);
+	}
+}*/
+
+static int logical_dispose(word_t val_1, word_t val_2, int op_type){
+	switch(op_type){
+		case TK_EQ: 
+			if (val_1 == val_2) return 1;
+			else return 0;
+		case TK_LT:
+			if (val_1 < val_2) return 1;
+			else return 0;
+		case TK_MT:
+			if (val_1 > val_2) return 1;
+			else return 0;
+		case TK_LOE:
+			if (val_1 <= val_2) return 1;
+			else return 0;
+		case TK_MOE: 
+			if (val_1 >= val_2) return 1;
+			else return 0;
+		case TK_NEQ:
+			if (val_1 != val_2) return 1;
+			else return 0;
+		case TK_AND:
+			if (val_1 && val_2) return 1;
+			else return 0;
+		case TK_OR:
+			if (val_1 || val_2) return 1;
+			else return 0;
+		default:
+			printf("Maybe there are some intersting default.\n");
+			return 0;
+	}
+}
+
 word_t eval(int p,int q,bool* success){
 	*success = true;
-	if (p > q) {printf("error location\n"); *success = false; return 0;}
+	if (p > q) {printf("error p: %d\n",p); printf("error q: %d\n",q);
+	printf("error location\n"); *success = false; return 0;}
 	else if (p == q){
 		if (tokens[p].type == TK_NUM) return atoi(tokens[p].str);
-		else {printf("Not a expression\n"); *success = false; return 0;}
+		else {printf("Not a valid expression\n"); *success = false; return 0;}
 	}
 	else if (check_parentheses(p,q) == true) return eval(p+1,q-1,success);
 	else {
 		//word_t result;
 		int major_op_location = find_major_op_location(p,q);
+		if (tokens[major_op_location].type == TK_POT) 
+			return atoi(tokens[major_op_location+1].str);
 		word_t val_1 = eval(p,major_op_location-1,success);
 		word_t val_2 = eval(major_op_location+1,q,success);
+		if (logical(tokens[major_op_location].type)){
+			int result = logical_dispose(val_1, val_2, tokens[major_op_location].type);
+			return result;
+		}
 		switch (tokens[major_op_location].type){
 			case '+': return val_1+val_2;
 			case '-': return val_1-val_2;
@@ -209,9 +343,10 @@ word_t eval(int p,int q,bool* success){
 				if (val_2 == 0) {
 				*success = false;
 				printf("You put a '0' behind '/', please check your expression\n");
-				return 0;}
+				return 0;
+				}
 				else return val_1/val_2;
-			default: printf("Unknown option\n"); return 0;
+			default: printf("There is an unknown option\n"); return 0;
 		}
 	}
   return 0;

@@ -99,8 +99,8 @@ static int cmd_x(char *args){
 		return 0;
 		}
 	for (int i = 0; i < len; i++){
-		word_t data = paddr_read(addr + i-1,1);
-		printf("Address: 0x%x, Data: 0x%x\n", addr + i, data);
+		word_t data = paddr_read(addr + 4*i,4);
+		printf("Address: 0x%x, Data: 0x%x\n", addr + 4*i, data);
 		}
 	return 0;
 }
@@ -127,6 +127,7 @@ static struct {
   { "info", "Exhibit registers or watchpoints", cmd_info },
   { "x", "Scan memory", cmd_x },
   { "p", "Calculate the expression", cmd_p},
+  //{"w",""}
   /* TODO: Add more commands */
 
 };
