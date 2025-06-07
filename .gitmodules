@@ -1,0 +1,3 @@
+[submodule "nemu/yosys-sta"]
+	path = nemu/yosys-sta
+	url = https://github.com/NJU-ProjectN/abstract-machine
