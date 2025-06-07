@@ -40,16 +40,20 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {" +", TK_NOTYPE},    // spaces
+  {" +", TK_NOTYPE},    // space
+  {"\\|\\|", TK_OR}, 	//logical or
   {"\\$[A-Za-z]+([0-9]?)+", TK_REG}, 	//register
   {"==", TK_EQ},        // equal
-  {"<", TK_LT},  		//less than
-  {">", TK_MT},  		//more than
   {"<=", TK_LOE},		//less or equal
   {">=", TK_MOE},		//more or equal
   {"!=", TK_NEQ}, 		//not equal
+  {"<", TK_LT},  		//less than
+  {">", TK_MT},  		//more than
+  //{"<=", TK_LOE},		//less or equal
+  //{">=", TK_MOE},		//more or equal
+  //{"!=", TK_NEQ}, 		//not equal
   {"&&", TK_AND},  		//logical and
-  {"\\|\\|", TK_OR}, 		//logical or
+  //{"\\|\\|", TK_OR}, 	//logical or
   {"\\+", '+'},         
   {"\\-", '-'},
   {"\\(", '('},
@@ -116,8 +120,8 @@ static bool make_token(char* e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        //Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        //    i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -229,8 +233,9 @@ bool check_parentheses(int p, int q){
 			if (tokens[i].type == '(') count++;
 			if (tokens[i].type == ')') count--;
 			if (count < 0) return false;
+			if (count == 0) return i == q;
 		}
-		if (count == 0) return true;
+		//if (count == 0) return true;
 	}
 	return false;
 }
@@ -240,7 +245,7 @@ bool check_parentheses(int p, int q){
 static bool logical(int token_type){
 	switch(token_type){
 		case TK_EQ:  case TK_LT:  case TK_MT:  case TK_LOE:
-		case TK_MOE: case TK_NEQ: case TK_AND:
+		case TK_MOE: case TK_NEQ: case TK_AND: case TK_OR:
 		return true;
 	default: return false;
 	}
@@ -257,8 +262,16 @@ static int level(int token_type){
 	}
 }
 
+/*static word_t par_dispose(int p, int q, bool* success){
+	//TODO:完成括号处理函数
+	int left_index = -1;
+	for (int i = p; i < q; i++){
+		
+	}
+}*/
+
 static int find_major_op_location(int p,int q){
-	int par = 0, op_level = 3,location = -1;
+	int par = 0, op_level = 4,location = -1;
 	for (int i = p; i <= q; i++){
 		if (tokens[i].type == '(') par++;       //if it's in  parentheses
 		else if (tokens[i].type == ')') par--;  //needn't consider it
@@ -329,8 +342,8 @@ word_t eval(int p,int q,bool* success){
 		int major_op_location = find_major_op_location(p,q);
 		if (tokens[major_op_location].type == TK_POT) 
 			return atoi(tokens[major_op_location+1].str);
-		word_t val_1 = eval(p,major_op_location-1,success);
-		word_t val_2 = eval(major_op_location+1,q,success);
+		int32_t val_1 = eval(p,major_op_location-1,success);
+		int32_t val_2 = eval(major_op_location+1,q,success);
 		if (logical(tokens[major_op_location].type)){
 			int result = logical_dispose(val_1, val_2, tokens[major_op_location].type);
 			return result;

@@ -24,6 +24,9 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+bool exihibit_watchpoint();
+void wp_create(char* monitor_expr);
+bool wp_delete(int NO);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -50,9 +53,6 @@ static int cmd_c(char *args) {
 
 static int cmd_si(char *args){
 	char *arg = strtok(args," ");
-/*	if (arg == NULL){
-		printf("Too few arguments.");
-		return 1;}*/
 	int steps;
 	if (arg == NULL) steps = 1;
 	else steps = atoi(arg);
@@ -65,7 +65,8 @@ static int cmd_si(char *args){
 }
 
 static int cmd_q(char *args) {
-  return -1;
+	nemu_state.state = NEMU_QUIT;
+	return -1;
 }
 
 static int cmd_info(char *args){
@@ -80,6 +81,9 @@ static int cmd_info(char *args){
 		printf("all register have been printed.\n");
 		}
 	else if (strcmp(arg,"w") == 0){
+		bool wp_exisit = exihibit_watchpoint();
+		if (wp_exisit) printf("All watchpoint have been printed.\n");
+		else printf("No watchpoint can print.\n");
 		}
 	else printf("Unknown command!\n"); 
 	}
@@ -88,19 +92,21 @@ static int cmd_info(char *args){
 
 static int cmd_x(char *args){
 	char* str_len = strtok(args," ");
+	bool success;
 	char* addr_str = strtok(NULL," ");
 	if (str_len == NULL || addr_str == NULL) {
 		printf("Invalid input!\n");
 		return -1;
 		}
-	int len = atoi(str_len); int addr = strtol(addr_str,NULL,16);
+	int len = atoi(str_len); //int addr = strtol(addr_str,NULL,16);
+	word_t address = expr(addr_str, &success); int addr = (int)address;
 	if (!in_pmem(addr) || !in_pmem(addr + len - 1)) {
 		printf("Not a valid address.\n");
 		return 0;
 		}
 	for (int i = 0; i < len; i++){
 		word_t data = paddr_read(addr + 4*i,4);
-		printf("Address: 0x%x, Data: 0x%x\n", addr + 4*i, data);
+		printf("Address: 0x%08x, Data: 0x%08x\n", addr + 4*i, data);
 		}
 	return 0;
 }
@@ -112,6 +118,83 @@ static int cmd_p(char* args){
 	else printf("Result: %u\n",result);
 	return 0;
 }
+
+static int cmd_w(char* args){
+	//printf("receive a expr: %s\n",args);
+	if (!args) printf("Where is your f**king expression?\n");
+	else wp_create(args);
+	bool wp_exisit = exihibit_watchpoint();
+	if (wp_exisit) printf("Gift you a watchpoint exhibit.\n");
+	else printf("There isn't any watchpoint right now.\n");
+	return 0;
+}
+
+static int cmd_d(char* args){
+	char* endptr;
+	int NO = strtol(args, &endptr, 10);
+	bool dlt_suc = wp_delete(NO);
+	if(dlt_suc) printf("Watchpoint with NO.%d has deleted.\n",NO);
+	bool wp_exisit = exihibit_watchpoint();
+	if (wp_exisit) printf("Gift you a watchpoint exhibit.\n");
+	else printf("There isn't any watchpoint right now.\n");
+	return 0;
+}
+
+static int ext(char* args){
+    FILE *fp = fopen("tools/gen-expr/build/input", "r");
+    if (fp == NULL) {
+        perror("test_expr error: cannot open input file");
+        return -1;
+    }
+    char *e = NULL;
+    size_t len = 0;
+    ssize_t read;
+    bool success = false;
+    int all = 0;        
+    int pass = 0;      
+    while (true) {
+        uint32_t correct_res;
+        if(fscanf(fp, "%u", &correct_res) != 1) {
+            if (feof(fp)) break;
+            fprintf(stderr, "Error reading expected result\n");
+            break;
+        }
+        int c;
+        while ((c = fgetc(fp)) != EOF && isspace(c) && c != '\n') {}
+        if (c == EOF) break;
+        ungetc(c, fp);
+        read = getline(&e, &len, fp);
+        if (read == -1) break;
+        if (read > 0 && e[read-1] == '\n') {
+            e[read-1] = '\0';
+            read--;
+        }
+        all++;
+        word_t res = expr(e, &success);
+        if (!success) {
+            fprintf(stderr, "Expression evaluation failed: %s\n", e);
+            continue;
+        }
+        if (res == correct_res) pass++; 
+        else {
+            fprintf(stderr, "Mismatch:\n");
+            fprintf(stderr, "  Expression: %s\n", e);
+            fprintf(stderr, "  Expected: %u, Got: %u\n", correct_res, res);
+        }
+    }
+    fclose(fp);
+    if (e) free(e);
+    printf("pass:%d all:%d\n",pass,all);
+    printf("Pass rate: %.2f%%\n", (all > 0) ? (100.0 * pass / all) : 0.0);
+    if (pass == all) Log("All expr tests passed");
+    else Log("Some expr tests failed");
+    return 0;
+}
+
+/*static int cmd_dbug(){
+	printf(FMT_WORD, cpu.pc); printf("\n");
+	return 0;
+}*/
 
 static int cmd_help(char *args);
 
@@ -126,8 +209,11 @@ static struct {
   { "si", "Continue the execution by n steps", cmd_si },
   { "info", "Exhibit registers or watchpoints", cmd_info },
   { "x", "Scan memory", cmd_x },
-  { "p", "Calculate the expression", cmd_p},
-  //{"w",""}
+  { "p", "Calculate the expression", cmd_p },
+  { "w", "Add a new watchpoint", cmd_w },
+  { "d", "delete an unwanted watchpoint by NO.", cmd_d },
+  { "ext", "examine the expr.", ext},
+  //{ "dbug", "A temporary instruction used during development and testing.", cmd_dbug }
   /* TODO: Add more commands */
 
 };
@@ -191,7 +277,6 @@ void sdb_mainloop() {
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
         if (cmd_table[i].handler(args) < 0) {
-        	if (strcmp(cmd,"q") == 0) nemu_state.state = NEMU_QUIT;
         return;}
         break;
       }
