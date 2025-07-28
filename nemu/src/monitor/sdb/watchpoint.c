@@ -24,9 +24,6 @@ typedef struct watchpoint {
   struct watchpoint *next;
   char monitor_expr[32];
   word_t initial_value;
-
-  /* TODO: Add more members if necessary */
-
 } WP;
 
 static WP wp_pool[NR_WP] = {};
@@ -43,8 +40,6 @@ void init_wp_pool() {
   head = NULL;
   free_ = wp_pool;
 }
-
-/* TODO: Implement the functionality of watchpoint */
 
 WP* new_wp(){
 	if (free_ == NULL) {printf("No free watchpoint availiable.\n"); assert(0);}

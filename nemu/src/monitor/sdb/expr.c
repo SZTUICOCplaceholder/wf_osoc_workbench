@@ -29,15 +29,13 @@ enum {
   TK_NOTYPE = 256, TK_EQ, TK_NUM, TK_REG, TK_LOE, TK_MOE, TK_NEQ,
   TK_LT, TK_MT, TK_AND, TK_OR, TK_POT
 	/*——————————————//finished?——————————————*/
-  /* TODO: Add more token types */
 };
 
 static struct rule {
   const char *regex;
   int token_type;
 } rules[] = {
-  /* TODO: Add more rules.
-   * Pay attention to the precedence level of different rules.
+   /* Pay attention to the precedence level of different rules.
    */
 
   {" +", TK_NOTYPE},    // space
@@ -125,10 +123,6 @@ static bool make_token(char* e) {
 
         position += substr_len;
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
-         * to record the token in the array `tokens'. For certain types
-         * of tokens, some extra actions should be performed.
-         */
         int copy_len;
         switch (rules[i].token_type) {
         	case TK_NOTYPE: break;
@@ -240,8 +234,6 @@ bool check_parentheses(int p, int q){
 	return false;
 }
 
-  /* TODO: Insert codes to evaluate the expression. */
-
 static bool logical(int token_type){
 	switch(token_type){
 		case TK_EQ:  case TK_LT:  case TK_MT:  case TK_LOE:
@@ -261,14 +253,6 @@ static int level(int token_type){
 		default: return 10;
 	}
 }
-
-/*static word_t par_dispose(int p, int q, bool* success){
-	//TODO:完成括号处理函数
-	int left_index = -1;
-	for (int i = p; i < q; i++){
-		
-	}
-}*/
 
 static int find_major_op_location(int p,int q){
 	int par = 0, op_level = 4,location = -1;

@@ -214,7 +214,6 @@ static struct {
   { "d", "delete an unwanted watchpoint by NO.", cmd_d },
   { "ext", "examine the expr.", ext},
   //{ "dbug", "A temporary instruction used during development and testing.", cmd_dbug }
-  /* TODO: Add more commands */
 
 };
 
