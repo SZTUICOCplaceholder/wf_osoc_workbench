@@ -2,7 +2,7 @@
 
 module ysyx_25060166_IFU(
     input               clk,
-    input               resetn,
+    input               rst,
     input               jump_sig,
     input   [`ysyx_25060166_WIDTH-1:0]  jump_addr,
     output  [`ysyx_25060166_WIDTH-1:0]  pc_count
@@ -11,7 +11,7 @@ module ysyx_25060166_IFU(
     reg [`ysyx_25060166_WIDTH-1:0] pc;
 
     always @(posedge clk) begin
-        if (!resetn) begin
+        if (rst) begin
             pc <= `ysyx_25060166_WIDTH'h8000_0000;
         end else begin
             if (jump_sig) begin

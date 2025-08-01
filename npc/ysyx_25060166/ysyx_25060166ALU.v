@@ -8,7 +8,7 @@ module ysyx_25060166_ALU(
     output  [`ysyx_25060166_WIDTH-1:0] ALU_OUTPUT
 );
 
-    wire    [`WIDTH-1:0] result;
+    wire    [`ysyx_25060166_WIDTH-1:0] result;
 
     always @(*) begin
         if (op == 4'b000) begin
