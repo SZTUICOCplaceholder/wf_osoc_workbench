@@ -32,6 +32,7 @@ static bool g_print_step = false;
 
 void device_update();
 void watchpoint_difftest();
+void itrace_display();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -40,21 +41,6 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_WATCHPOINT
-/*
-	WP* wp = head;
-	while(wp != NULL){
-		word_t now_value = expr(wp->monitor_expr);
-		if (now_value != wp->initial_value){
-			printf("a watchpoint is triggered.\n"
-			"NO.%d  expr. %s\n"
-			"original value. %" PRIu32 " \n"
-			"new value. %" PRIu32 " \n"
-			,wp->NO, wp->monitor_expr, wp->initial_value, now_value);
-			nemu_state.state = NEMU_STOP;
-		}
-		wp = wp->next;
-	}
-*/
 	watchpoint_difftest();
 #endif
 }
@@ -111,6 +97,7 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+  itrace_display();
   isa_reg_display();
   statistic();
 }
@@ -136,6 +123,7 @@ void cpu_exec(uint64_t n) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
     case NEMU_END: case NEMU_ABORT:
+      itrace_display();
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
