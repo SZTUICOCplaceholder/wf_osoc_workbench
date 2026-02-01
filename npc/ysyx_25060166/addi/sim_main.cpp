@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     Verilated::traceEverOn(true);
     VerilatedVcdC* tfp = new VerilatedVcdC;
     
-    Vaddi* top = new Vaddi;
+    Vysyx_25060166CPU* top = new Vysyx_25060166CPU;
     top->trace(tfp, 99);
     tfp->open("waveform.vcd");
 
