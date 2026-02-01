@@ -1,4 +1,4 @@
-`include "RV32E.vh"
+`include "../vcode/include/RV32E.vh"
 
 module ysyx_25060166_REG_ARRAY(
     input               clk,

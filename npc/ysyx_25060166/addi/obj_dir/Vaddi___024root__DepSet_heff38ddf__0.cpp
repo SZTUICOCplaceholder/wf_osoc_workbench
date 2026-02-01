@@ -3,9 +3,18 @@
 // See Vaddi.h for the primary calling header
 
 #include "verilated.h"
+#include "verilated_dpi.h"
 
 #include "Vaddi__Syms.h"
 #include "Vaddi___024root.h"
+
+extern "C" void sim_finish();
+
+VL_INLINE_OPT void Vaddi___024root____Vdpiimwrap_addi__DOT__sim_finish_TOP() {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vaddi___024root____Vdpiimwrap_addi__DOT__sim_finish_TOP\n"); );
+    // Body
+    sim_finish();
+}
 
 #ifdef VL_DEBUG
 VL_ATTR_COLD void Vaddi___024root___dump_triggers__ico(Vaddi___024root* vlSelf);

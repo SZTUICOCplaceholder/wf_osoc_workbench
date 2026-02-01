@@ -16,6 +16,8 @@
 // INCLUDE MODULE CLASSES
 #include "Vaddi___024root.h"
 
+// DPI TYPES for DPI Export callbacks (Internal use)
+
 // SYMS CLASS (contains all model state)
 class Vaddi__Syms final : public VerilatedSyms {
   public:

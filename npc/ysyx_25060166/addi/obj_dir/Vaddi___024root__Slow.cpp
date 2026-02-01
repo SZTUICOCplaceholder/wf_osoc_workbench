@@ -3,6 +3,7 @@
 // See Vaddi.h for the primary calling header
 
 #include "verilated.h"
+#include "verilated_dpi.h"
 
 #include "Vaddi__Syms.h"
 #include "Vaddi___024root.h"

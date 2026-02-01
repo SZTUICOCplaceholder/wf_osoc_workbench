@@ -4,6 +4,7 @@
 #include "Vaddi.h"
 #include "Vaddi__Syms.h"
 #include "verilated_vcd_c.h"
+#include "verilated_dpi.h"
 
 //============================================================
 // Constructors

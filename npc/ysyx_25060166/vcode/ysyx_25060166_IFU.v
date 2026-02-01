@@ -10,11 +10,17 @@ module ysyx_25060166_IFU(
 
     reg [`ysyx_25060166_WIDTH-1:0] pc;
 
+	import "DPI-C" function void halt();
+
     always @(posedge clk) begin
         if (rst) begin
-            pc <= `ysyx_25060166_WIDTH'h8000_0000;
+            pc <= `ysyx_25060166_MEMBASE;
         end else begin
             if (jump_sig) begin
+				if(jump_addr == pc) begin
+					halt();
+					$display("stop simulation by DPI-C");
+				end
                 pc <= jump_addr;
             end else begin
                 pc <= pc + `ysyx_25060166_WIDTH'h0000_0004;

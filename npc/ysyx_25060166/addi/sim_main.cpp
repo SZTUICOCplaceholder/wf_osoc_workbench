@@ -69,6 +69,10 @@ private:
     uint32_t memory_size;   // 内存大小 (8MB)
 };
 
+extern "C" void sim_finish(){
+	Verilated::gotFinish(true);
+}
+
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
     Verilated::traceEverOn(true);
@@ -142,10 +146,10 @@ int main(int argc, char** argv) {
             instruction_count++;
             // 计算当前执行指令地址（PC-4）
             uint32_t current_pc = top->RAM_RADDR - 4;
-            if (top->RAM_RDATA == 0x00100073) {
+           /* if (top->RAM_RDATA == 0x00100073) {
                 std::cout << "simulation end" << std::endl;
                 break;
-            }
+            }*/
             std::cout << "Instruction " << instruction_count 
                       << " executed at 0x" << std::hex << current_pc 
                       << std::dec << std::endl;

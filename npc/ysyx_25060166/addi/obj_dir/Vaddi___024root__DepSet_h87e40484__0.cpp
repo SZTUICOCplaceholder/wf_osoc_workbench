@@ -3,6 +3,7 @@
 // See Vaddi.h for the primary calling header
 
 #include "verilated.h"
+#include "verilated_dpi.h"
 
 #include "Vaddi___024root.h"
 
@@ -31,6 +32,8 @@ void Vaddi___024root___eval_act(Vaddi___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vaddi___024root___eval_act\n"); );
 }
 
+void Vaddi___024root____Vdpiimwrap_addi__DOT__sim_finish_TOP();
+
 VL_INLINE_OPT void Vaddi___024root___nba_sequent__TOP__0(Vaddi___024root* vlSelf) {
     if (false && vlSelf) {}  // Prevent unused
     Vaddi__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
@@ -45,6 +48,9 @@ VL_INLINE_OPT void Vaddi___024root___nba_sequent__TOP__0(Vaddi___024root* vlSelf
     CData/*0:0*/ __Vdlyvset__addi__DOT__REG_ARR__DOT__reg_array__v32;
     __Vdlyvset__addi__DOT__REG_ARR__DOT__reg_array__v32 = 0;
     // Body
+    if ((0x100073U == vlSelf->RAM_RDATA)) {
+        Vaddi___024root____Vdpiimwrap_addi__DOT__sim_finish_TOP();
+    }
     __Vdlyvset__addi__DOT__REG_ARR__DOT__reg_array__v0 = 0U;
     __Vdlyvset__addi__DOT__REG_ARR__DOT__reg_array__v32 = 0U;
     if (vlSelf->rst) {
@@ -151,7 +157,7 @@ void Vaddi___024root___eval(Vaddi___024root* vlSelf) {
 #ifdef VL_DEBUG
                 Vaddi___024root___dump_triggers__ico(vlSelf);
 #endif
-                VL_FATAL_MT("addi.v", 3, "", "Input combinational region did not converge.");
+                VL_FATAL_MT("addi.sv", 3, "", "Input combinational region did not converge.");
             }
             vlSelf->__VicoIterCount = ((IData)(1U) 
                                        + vlSelf->__VicoIterCount);
@@ -174,7 +180,7 @@ void Vaddi___024root___eval(Vaddi___024root* vlSelf) {
 #ifdef VL_DEBUG
                     Vaddi___024root___dump_triggers__act(vlSelf);
 #endif
-                    VL_FATAL_MT("addi.v", 3, "", "Active region did not converge.");
+                    VL_FATAL_MT("addi.sv", 3, "", "Active region did not converge.");
                 }
                 vlSelf->__VactIterCount = ((IData)(1U) 
                                            + vlSelf->__VactIterCount);
@@ -189,7 +195,7 @@ void Vaddi___024root___eval(Vaddi___024root* vlSelf) {
 #ifdef VL_DEBUG
                 Vaddi___024root___dump_triggers__nba(vlSelf);
 #endif
-                VL_FATAL_MT("addi.v", 3, "", "NBA region did not converge.");
+                VL_FATAL_MT("addi.sv", 3, "", "NBA region did not converge.");
             }
             __VnbaIterCount = ((IData)(1U) + __VnbaIterCount);
             Vaddi___024root___eval_nba(vlSelf);

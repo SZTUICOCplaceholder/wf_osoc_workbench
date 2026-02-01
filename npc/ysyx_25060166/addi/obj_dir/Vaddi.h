@@ -9,6 +9,7 @@
 #define VERILATED_VADDI_H_  // guard
 
 #include "verilated.h"
+#include "svdpi.h"
 
 class Vaddi__Syms;
 class Vaddi___024root;
