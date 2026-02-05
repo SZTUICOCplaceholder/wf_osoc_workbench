@@ -1,6 +1,5 @@
-#include "../include/npc.h"
-#include "../include/npcpp.hpp"
-#include "../include/dpic.h"
+#include "include/npc.h"
+#include "include/npcpp.hpp"
 
 const char* regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -13,8 +12,8 @@ const char* regs[] = {
 
 void reg_display(){
 	for(int i = 0;  i < reg_number; i++){
-		word_t reg_value = gpr[i];
+		word_t reg_value = top_gpr[i];
 		printf("%d. %s: 0x%08x \t \n", i, regs[i], reg_value);
 	}
-	printf("%d. pc: 0x%08x \t \n",reg_number, pc);
+	printf("%d. pc: 0x%08x \t \n",reg_number, top_pc);
 }

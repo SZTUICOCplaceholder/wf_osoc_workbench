@@ -1,16 +1,21 @@
-#include "../include/npc.h"
+#include "include/npc.h"
+#include "include/state.h"
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "../include/memory.h"
+#include "include/memory.h"
 
 bool is_batch_mode = false;
+
+void batch_mode_run(){
+	is_batch_mode = true;
+}
 
 void reg_display();
 word_t pmem_read(paddr_t addr, int len);
 static int cmd_help(char *args);
 
 bool in_mem(paddr_t paddr){
-	return paddr-MEM_BASE < MEM_SIZE;
+	return paddr-MEM_BASE < MEMSIZE;
 }
 
 static char* rl_gets() {
@@ -36,8 +41,7 @@ static int cmd_c(char* args){
 }
 
 static int cmd_q(char* args){
-	//quit_simulation();
-//	printf("手动退出仿真\n");
+	npc_state.state = NPC_QUIT;
 	return -1;
 }
 
@@ -106,6 +110,11 @@ static int cmd_d(char* args){
 	return 0;
 }
 
+static int cmd_lab(char* args){
+	// print_gpr();
+	return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -120,7 +129,7 @@ static struct {
   { "p", "Calculate the expression", cmd_p },
   { "w", "Add a new watchpoint", cmd_w },
   { "d", "delete an unwanted watchpoint by NO.", cmd_d },
-  //{ "dbug", "A temporary instruction used during development and testing.", cmd_dbug }
+  { "lab", "A temporary instruction used during development and testing.", cmd_lab }
 };
 
 int NR_CMD = sizeof(cmd_table)/sizeof(cmd_table[0]);
@@ -151,6 +160,7 @@ static int cmd_help(char *args){
 void npc_sdb_mainloop(){
 	if(is_batch_mode){
 		cmd_c(NULL);
+		return;
 	}
 	
 	for (char *str; (str = rl_gets()) != NULL; ) {

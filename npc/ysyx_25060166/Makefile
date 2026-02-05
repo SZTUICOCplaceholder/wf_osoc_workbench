@@ -1,14 +1,14 @@
 TOP_MODULE    := ysyx_25060166CPU 
 VERILATOR     := verilator
 
-VL_SRC_DIR    := vcode
-TB_SRC_DIR    := src
+VL_SRC_DIR    := vsrc
+TB_SRC_DIR    := csrc
 BUILD_DIR     := build/verilator
-INC_DIR       := include      
-VINC_DIR      := vcode/include 
+INC_DIR       := csrc/include      
+VINC_DIR      := vsrc/include 
 
 VL_SRCS       := $(shell find $(abspath $(VL_SRC_DIR)) -name "*.v" -or -name "*.sv")
-SRC		  := $(shell find $(abspath $(TB_SRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+SRC		  	  := $(shell find $(abspath $(TB_SRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 MAIN_FILE	  := simulation.cpp
 MAIN_FILE_PATH:= $(abspath$(TB_SRC_DIR)/$(MAIN_FILE))
 SRC_NOM		  := $(filter-out $(MAIN_FILE_PATH), $(SRC))
@@ -18,7 +18,21 @@ VL_HEADER     := $(BUILD_DIR)/V$(TOP_MODULE).h
 SIM_EXE       := $(BUILD_DIR)/V$(TOP_MODULE)
 CPU_CORES     ?= 8
 
-LDFLAGS += -lreadline -lncurses
+DIFF_FLAG	  := --diff=$(NEMU_HOME)/build/riscv32-nemu-interpreter-so
+
+ifneq ($(findstring $(DIFF_FLAG), $(NPC_FLAGS)), $(DIFF_FLAG))
+	NPC_FLAGS += $(DIFF_FLAG)
+endif
+
+IMG			  ?= $(if $(image),$(image)-riscv32e-npc.bin,)
+
+LDFLAGS += -lreadline -lncurses -lcapstone
+
+LIBCAPSTONE = /home/wf/Desktop/ysyx-workbench/nemu/tools/capstone/repo/libcapstone.so.5
+CFLAGS += -I /home/wf/Desktop/ysyx-workbench/nemu/tools/capstone/repo/include
+#src/trace/disasm.c: $(LIBCAPSTONE)
+$(LIBCAPSTONE):
+	$(MAKE) -C /home/wf/Desktop/ysyx-workbench/nemu/tools/capstone
 
 # 阶段1参数：仅生成头文件（无--exe，不关联C++代码）
 VL_HEADER_FLAGS := --cc \
@@ -53,7 +67,7 @@ $(SIM_EXE): $(VL_HEADER) $(TB_SRCS)
 compile: $(SIM_EXE)
 
 run: compile
-	@./$(SIM_EXE) $(NPC_FLAGS)
+	@./$(SIM_EXE) $(NPC_FLAGS) $(IMG)
 
 wave:
 #	gtkwave $(BUILD_DIR)/V$(TOP_MODULE).vcd

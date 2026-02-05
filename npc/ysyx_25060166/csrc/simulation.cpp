@@ -1,9 +1,10 @@
-#include "../include/npcpp.hpp"
+#include "include/npcpp.hpp"
 #include <iostream>
 
 void npc_sdb_mainloop();
 void npc_init(int argc, char *argv[]);
 void memory_not_use();
+int is_statu_bad();
 
 VerilatedVcdC* tfp = nullptr;
 Vysyx_25060166CPU* top = nullptr;
@@ -38,10 +39,7 @@ int main(int argc, char** argv){
 
 	tfp->close();
 	delete tfp; delete top;
-	//destory_virtual_memory(byte_t* memory)
 	memory_not_use();
-	if(Verilated::gotFinish()) std::cout<<"get simulation finish signal"<<std::endl;
-	std::cout << "仿真结束，退出程序" << std::endl;
 	
-	return 0;
+	return is_statu_bad();
 }

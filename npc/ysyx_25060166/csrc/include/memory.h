@@ -4,15 +4,11 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdint.h>
+#include "word.h"
 
 #define MEM_SIZE 128
 #define MEMSIZE MEM_SIZE*1024*1024
 #define MEM_BASE 0x80000000
-
-typedef uint32_t paddr_t;
-typedef uint32_t word_t;
-typedef word_t vaddr_t;
-typedef uint8_t byte_t;
 
 uint8_t* guest_to_host(paddr_t paddr);
 

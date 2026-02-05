@@ -1,6 +1,7 @@
-#include "../include/memory.h"
+#include "include/memory.h"
 #include <bits/mman-linux.h>
 #include <cstdlib>
+#include "include/state.h"
 
 byte_t* vmem = NULL;  //用全局变量方便操作
 
@@ -26,15 +27,16 @@ void/***/ create_virtual_memory(){
 
     //输出分配成功信息
     printf("Virtual memory created via mmap, size: %dMB\n", MEM_SIZE);
-    printf("Memory address range: [0x%08x - 0x%08x]\n", MEM_BASE, MEM_BASE+MEMSIZE-1);
+    printf(ANSI_FG_BLUE"Memory address range: [0x%08x - 0x%08x]" ANSI_NONE "\n", MEM_BASE, MEM_BASE+MEMSIZE-1);
 	//return virtual_memory;
 }
 
 void destory_virtual_memory(byte_t* memory){
     if(memory == NULL)  printf("no memory can destory\n");
     else{
-        munmap(memory, MEM_SIZE);
-        printf("memory has been destory\n");
+        int mem_ret = munmap(memory, MEMSIZE);
+        if(mem_ret == 0) printf(ANSI_FG_BLUE "physic memory [%p - %p] has been free" ANSI_NONE "\n", memory, memory+MEMSIZE-1);
+		else printf(ANSI_FG_RED"physic memory [%p - %p] free FAILED" ANSI_NONE "\n",memory, memory+MEMSIZE-1);
     }
 }
 
@@ -50,8 +52,8 @@ void pmem_write(paddr_t addr, int len, word_t data){
         return;
 	}
     else{
-        printf("address = %08x out of bound of memory\n", addr);
-        assert(0);
+        printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
+//		assert(0);
     }
 }
 
@@ -61,8 +63,9 @@ word_t pmem_read(paddr_t addr, int len){
         return ret;
     }
     else{
-        printf("address = %08x out of bound of memory\n", addr);
-        assert(0);
+        printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
+		return 0;
+//		assert(0);
     }
 }
 
@@ -71,5 +74,15 @@ word_t vmem_read(vaddr_t addr, int len){
 }
 
 void vmem_write(vaddr_t addr, int len, word_t data){
+    return pmem_write(addr, len, data);
+}
+
+extern "C" word_t mem_read(vaddr_t addr, int len){
+//	printf("memory read at address: 0x%08x\n",addr);
+    return pmem_read(addr, len);
+}
+
+extern "C" void mem_write(vaddr_t addr, int len, word_t data){
+//	printf("memory write at address: 0x%08x , data: 0x%08x\n",addr, data);
     return pmem_write(addr, len, data);
 }
