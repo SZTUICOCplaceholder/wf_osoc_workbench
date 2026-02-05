@@ -191,8 +191,8 @@ static int ext(char* args){
     return 0;
 }
 
-/*static int cmd_dbug(){
-	printf(FMT_WORD, cpu.pc); printf("\n");
+/*static int cmd_lab(){
+	printf("diff_port: %d\n", difftest_port);
 	return 0;
 }*/
 
@@ -213,7 +213,7 @@ static struct {
   { "w", "Add a new watchpoint", cmd_w },
   { "d", "delete an unwanted watchpoint by NO.", cmd_d },
   { "ext", "examine the expr.", ext},
-  //{ "dbug", "A temporary instruction used during development and testing.", cmd_dbug }
+  //{ "lab", "A temporary instruction used during development and testing.", cmd_lab }
 
 };
 

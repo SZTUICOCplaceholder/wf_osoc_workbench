@@ -32,7 +32,9 @@ void itrace_display(){
         else    printf("    ");
         printf("0x%08x    ", iring_buffer[i].pc);
         char buffer[32];
+		#ifdef CONFIG_ITRACE
         disassemble(buffer, sizeof(buffer), iring_buffer[i].pc, (uint8_t*)&iring_buffer[i].inst, 4);
-        puts(buffer);
+        #endif
+		puts(buffer);
     }
 }
