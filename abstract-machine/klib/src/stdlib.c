@@ -29,14 +29,32 @@ int atoi(const char* nptr) {
   return x;
 }
 
+char* free_heap = NULL;	//空闲区指针
+
 void *malloc(size_t size) {
   // On native, malloc() will be called during initializaion of C runtime.
   // Therefore do not call panic() here, else it will yield a dead recursion:
   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+	
+	//初始化空闲区指针
+	if(free_heap == NULL){
+		free_heap = (char*)heap.start;
+	}
+	//将地址四字节对齐
+	if(size % 4){
+		size = (size+3) & 0xFFFFFFFC;
+	}
+
+	if(size == 0 || (free_heap+size) >= (char*)heap.end){	//不能分配0字节或超发
+		return NULL;
+	}else{
+		void* addr = free_heap;
+		free_heap += size;			//移动空闲区指针
+		return addr;
+	}
 #endif
-  return NULL;
+	return NULL;
 }
 
 void free(void *ptr) {

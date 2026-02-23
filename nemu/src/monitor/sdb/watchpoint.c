@@ -60,7 +60,7 @@ void free_wp(WP* wp){
 void wp_create(char* monitor_expr){
 	printf("receive a expr: %s\n",monitor_expr);
 	WP* wp = new_wp();
-	strncpy(wp->monitor_expr,monitor_expr,32);
+	strncpy(wp->monitor_expr,monitor_expr,31);
 	//printf("copy finish\n");
 	bool ok;
 	word_t wp_value = expr(monitor_expr,&ok);

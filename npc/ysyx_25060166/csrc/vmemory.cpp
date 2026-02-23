@@ -2,10 +2,11 @@
 #include <bits/mman-linux.h>
 #include <cstdlib>
 #include "include/state.h"
+#include "include/device.h"
 
 byte_t* vmem = NULL;  //用全局变量方便操作
 
-void/***/ create_virtual_memory(){
+void create_virtual_memory(){
 
     //检查是否真的需要分配内存
     if(vmem != NULL){
@@ -26,7 +27,7 @@ void/***/ create_virtual_memory(){
     vmem = (byte_t*)virtual_memory;
 
     //输出分配成功信息
-    printf("Virtual memory created via mmap, size: %dMB\n", MEM_SIZE);
+    printf(ANSI_FG_BLUE"Virtual memory created via mmap, size: %dMB" ANSI_NONE "\n", MEM_SIZE);
     printf(ANSI_FG_BLUE"Memory address range: [0x%08x - 0x%08x]" ANSI_NONE "\n", MEM_BASE, MEM_BASE+MEMSIZE-1);
 	//return virtual_memory;
 }
@@ -46,26 +47,39 @@ void memory_not_use(){
 
 uint8_t* guest_to_host(paddr_t paddr){return vmem+paddr-MEM_BASE;}
 
+void serial_putch(char c);
+
 void pmem_write(paddr_t addr, int len, word_t data){
     if(addr-MEM_BASE < MEMSIZE){
         host_write(guest_to_host(addr), len, data);
         return;
 	}
+//	printf("serial write: 0x%08x\n", addr);
+	if(addr == SERIAL_PORT){
+		printf("%c",data);
+	}
     else{
-        printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
-//		assert(0);
+//		printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
+		assert(0);
     }
 }
+
+uint64_t get_time();
+// void get_time();
 
 word_t pmem_read(paddr_t addr, int len){
     if(addr-MEM_BASE < MEMSIZE){
         word_t ret = host_read(guest_to_host(addr), len);
         return ret;
-    }
+    }else if(addr == RTC_ADDR){
+		return get_time();
+		// get_time();
+		// return 0;
+	}
     else{
-        printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
+//		printf(ANSI_FG_RED"address = %08x out of bound of memory" ANSI_NONE "\n", addr);
 		return 0;
-//		assert(0);
+		assert(0);
     }
 }
 
@@ -79,10 +93,10 @@ void vmem_write(vaddr_t addr, int len, word_t data){
 
 extern "C" word_t mem_read(vaddr_t addr, int len){
 //	printf("memory read at address: 0x%08x\n",addr);
-    return pmem_read(addr, len);
+    return vmem_read(addr, len);
 }
 
 extern "C" void mem_write(vaddr_t addr, int len, word_t data){
 //	printf("memory write at address: 0x%08x , data: 0x%08x\n",addr, data);
-    return pmem_write(addr, len, data);
+    return vmem_write(addr, len, data);
 }

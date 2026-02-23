@@ -64,6 +64,10 @@ module ysyx_25060166_ALU(
 				mem_addr = (reg_data_0 + imm) & half_align;
 				reg_write_data = {16'h0000,mem_rdata[15:0]};
 			end
+			`LB: begin
+				mem_addr = reg_data_0 + imm;
+				reg_write_data = {{24{mem_rdata[7]}},mem_rdata[7:0]};
+			end
 			`LBU: begin
 				mem_addr = reg_data_0 + imm;
 				reg_write_data = {24'h000000,mem_rdata[7:0]};
@@ -103,6 +107,7 @@ module ysyx_25060166_ALU(
 				end
 			end
 			`OR: reg_write_data = reg_data_0 | reg_data_1;
+			`ORI: reg_write_data = reg_data_0 | imm;
 			`XOR: reg_write_data = reg_data_0 ^ reg_data_1;
 			`XORI: reg_write_data = reg_data_0 ^ imm;
 			`AND: reg_write_data = reg_data_0 & reg_data_1;

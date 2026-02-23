@@ -60,7 +60,7 @@ static struct rule {
   {"\\/", '/'},
   {"0[Xx][0-9a-fA-F]+", TK_NUM},   //hexadecimal number
   {"[0-9]+", TK_NUM},
-}; 						//has finished       ?
+}; 
 
 #define NR_REGEX ARRLEN(rules)
 

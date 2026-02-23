@@ -1,7 +1,7 @@
 `include "RV32E.vh"
 
 module ysyx_25060166_MEM(
-//	input				clk,
+	input				clk,
 	input				write_en,
 	input				read_en,
 	input				half_write,
@@ -17,12 +17,14 @@ module ysyx_25060166_MEM(
 	import "DPI-C" function void mem_write(input int unsigned addr, input int len, input int unsigned data);
 
 	always @(*) begin
-
 		read_data = 0;
-
-		if(read_en) begin
+		if(read_en)begin
 			read_data = mem_read(address, 4);
-		end else if(write_en) begin
+		end
+	end
+
+	always @(posedge clk) begin
+		if(write_en) begin
 			if(half_write) begin 
 				mem_write(address, 2, {16'b0,half_data});
 			end else if(byte_write)begin
@@ -30,8 +32,6 @@ module ysyx_25060166_MEM(
 			end else begin
 				mem_write(address, 4, write_data);
 			end
-		end else begin
-			read_data = 0;				//default assign
 		end
 	end
 

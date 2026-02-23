@@ -5,6 +5,7 @@ void npc_sdb_mainloop();
 void npc_init(int argc, char *argv[]);
 void memory_not_use();
 int is_statu_bad();
+uint64_t get_time();
 
 VerilatedVcdC* tfp = nullptr;
 Vysyx_25060166CPU* top = nullptr;
@@ -19,10 +20,12 @@ void cpu_reset(){
 
 int main(int argc, char** argv){
 
-	for(int i = 0; i < argc; i++){
-		printf("argv[%d]: %s\n",i, argv[i]);
-	}
+	// for(int i = 0; i < argc; i++){
+	// 	printf("argv[%d]: %s\n",i, argv[i]);
+	// }
 	
+	get_time();
+
 	Verilated::commandArgs(argc, argv);
 	Verilated::traceEverOn(true);
 	tfp = new VerilatedVcdC;

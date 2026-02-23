@@ -43,11 +43,11 @@ VL_HEADER_FLAGS := --cc \
 
 # 阶段2参数：完整编译（含--exe，关联所有C++代码）
 VL_FULL_FLAGS  := --cc --exe --build -j $(CPU_CORES) \
-	             --trace \
+				 --trace \
 	             --top-module $(TOP_MODULE) \
 	             --Mdir $(BUILD_DIR) \
 				 --public-flat-rw \
-	             -Wall \
+				 -Wall \
 	             -I$(INC_DIR) \
 	             -I$(VINC_DIR) \
 	             -CFLAGS "-I$(INC_DIR) -std=c++17" \

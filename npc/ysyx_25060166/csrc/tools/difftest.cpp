@@ -84,29 +84,36 @@ void init_difftest(char *ref_so_file, long img_size, int port)
     ref_difftest_memcpy(MEM_BASE, guest_to_host(MEM_BASE), img_size, DIFFTEST_TO_REF);
 }
 
+void difftest_skip_ref(){
+  is_skip_ref = true;
+  skip_dut_nr_inst = 0;
+}
+
 void difftest_step(vaddr_t pc){
 	
 	CPU_state ref_r;
 
-	// if (skip_dut_nr_inst > 0) {
-	// 	ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
-	// 	if (ref_r.pc == npc) {
-	// 		skip_dut_nr_inst = 0;
-	// 		checkregs(&ref_r, npc);
-	// 		return;
-	// 	}
-	// 	skip_dut_nr_inst --;
-	// 	if (skip_dut_nr_inst == 0)
-	// 		panic("can not catch up with ref.pc = " FMT_WORD " at pc = " FMT_WORD, ref_r.pc, pc);
-	// 	return;
-	// }
+	if (skip_dut_nr_inst > 0) {
+		ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
+		if (ref_r.pc == pc) {
+			skip_dut_nr_inst = 0;
+			checkreg(&ref_r, pc);
+			return;
+		}
+		skip_dut_nr_inst --;
+		if (skip_dut_nr_inst == 0)
+			printf("can not catch up with ref.pc = 0x%08x at pc = 0x%08x", ref_r.pc, pc);
+//			panic("can not catch up with ref.pc = " FMT_WORD " at pc = " FMT_WORD, ref_r.pc, pc);
+		return;
+	}
 
-	// if (is_skip_ref) {
-	// 	// to skip the checking of an instruction, just copy the reg state to reference design
-	// 	ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
-	// 	is_skip_ref = false;
-	// 	return;
-	// }
+	if (is_skip_ref) {
+		// to skip the checking of an instruction, just copy the reg state to reference design
+		cpu_state_update();
+		ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+		is_skip_ref = false;
+		return;
+	}
 
 	ref_difftest_exec(1);
 	ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);

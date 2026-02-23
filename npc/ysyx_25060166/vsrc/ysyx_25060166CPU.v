@@ -90,7 +90,7 @@ module ysyx_25060166CPU(
     //temporary
 
 	ysyx_25060166_MEM MEM_IF(
-//		.clk		(clk),
+		.clk		(clk),
 		.write_en	(RAM_WEN),
 		.read_en	(RAM_REN),
 		.half_write	(mem_write_half),

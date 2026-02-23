@@ -58,6 +58,8 @@ void exec_once(){
 	return;
 }
 
+void difftest_skip_ref();
+
 extern "C" void execute(uint64_t n){
 
 	switch(npc_state.state){
@@ -73,7 +75,12 @@ extern "C" void execute(uint64_t n){
 			break;
 		}
 		exec_once();
-		trace_and_difftest();
+		if(top->RAM_ADDR == 0xa00003f8 || top->RAM_ADDR == 0xa0000048 || top->RAM_ADDR == 0xa000004c){
+			// std::cout<<"skip difftest"<<std::endl;
+			difftest_skip_ref();
+		}else{
+			trace_and_difftest();
+		}
 	}
 	
 	//HIT GOOD/BAD TRAP
@@ -103,6 +110,7 @@ extern "C" void halt(){
 }
 
 extern "C" void sim_finish(){
+	std::cout<<std::string(ANSI_FG_GREEN)+"ebreak stop simulation"+ANSI_NONE<<std::endl;
 	Verilated::gotFinish(true);
 	return;
 }

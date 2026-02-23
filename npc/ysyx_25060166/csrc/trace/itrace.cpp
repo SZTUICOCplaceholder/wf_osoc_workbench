@@ -32,7 +32,7 @@ void itrace_display(){
         else    printf("    ");
         printf("0x%08x    \n", iring_buffer[i].pc);
         // char buffer[32];
-        // // disassemble(buffer, sizeof(buffer), iring_buffer[i].pc, (uint8_t*)&iring_buffer[i].inst, 4);
-        // // puts(buffer);
+        // disassemble(buffer, sizeof(buffer), iring_buffer[i].pc, (uint8_t*)&iring_buffer[i].inst, 4);
+        // puts(buffer);
     }
 }

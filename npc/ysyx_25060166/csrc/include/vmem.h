@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "memory.h"
 
 void* create_virtual_memory();

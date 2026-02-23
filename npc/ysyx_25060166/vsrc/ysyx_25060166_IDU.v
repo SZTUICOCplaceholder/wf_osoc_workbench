@@ -45,7 +45,6 @@ module ysyx_25060166_IDU(
 		ALU_OP = `ALU_DEFAULT; imm = 0;	uncon_jump = 0; 
 
 		if(inst == 32'h00100073) begin
-			$display("ebreak finish simulation");
 			sim_finish();
 		end
 
@@ -57,18 +56,18 @@ module ysyx_25060166_IDU(
 					ALU_OP = `ADDI; 
 				end 
 				3'b011: begin
-					reg_wen = 1; ALU_OP = `SLTIU;
+					ALU_OP = `SLTIU;
 				end
 				3'b001: begin
 					if(immI[5] == 0) begin
-						ALU_OP = `SLLI; reg_wen = 1;
+						ALU_OP = `SLLI;
 					end else begin
 						$display("invalid slli, NPC choices to skip it");
 						reg_wen = 0;
 					end
 				end
 				3'b100: begin
-					reg_wen = 1; ALU_OP = `XORI;
+					ALU_OP = `XORI;
 				end
 				3'b101: begin
 					if(immI[5] == 0) begin
@@ -78,8 +77,11 @@ module ysyx_25060166_IDU(
 						reg_wen = 0;
 					end
 				end
+				3'b110: begin
+					ALU_OP = `ORI;
+				end
 				3'b111: begin
-					ALU_OP = `ANDI; reg_wen = 1;
+					ALU_OP = `ANDI;
 				end
 				default: begin end
 			endcase
@@ -96,6 +98,9 @@ module ysyx_25060166_IDU(
 		if(opcode == 7'b0000011) begin
 			imm = immI;
 			case (funct3)
+				3'b000: begin
+					mem_ren = 1; ALU_OP = `LB; reg_wen = 1;
+				end
 				3'b010: begin
 					mem_ren = 1; ALU_OP = `LW; reg_wen = 1;
 				end

@@ -58,9 +58,9 @@ static int cmd_si(char *args){
 	else steps = atoi(arg);
 	cpu_exec(steps);
 	printf("Command si %d has finished\n",steps);
-	/*if (nemu_state.state == NEMU_QUIT){
-	printf("Didn't run such many steps because your program ended before taht");
-	}*/   //Why can not do that?
+	if (nemu_state.state == NEMU_END){
+	printf("Didn't run such many steps because your program ended before taht\n");
+	}
 	return 0;
 }
 
